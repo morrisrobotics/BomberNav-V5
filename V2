@@ -1,0 +1,451 @@
+import tkinter as tk
+from tkinter import ttk
+Current_Tool = str("Line")
+Current_User = None
+Heading = None
+Coordinates = [
+
+]
+Path_History = [
+    
+]
+Line_Id = [
+
+]
+Lines = [
+
+]
+Input_List = [
+
+]
+Coordinates_List = None
+Coordinate_Length = 0
+Start_Point = None
+
+root = tk.Tk()
+root.geometry("1920x1080")
+
+Canvas_Width = 1515
+Canvas_Height = 775
+
+Canvas = tk.Canvas(root, width=Canvas_Width, height=Canvas_Height)
+Canvas.pack(fill="both", expand=True)
+
+Center_X = Canvas_Width // 2
+Center_Y = Canvas_Height // 2
+
+Field_Image_2v2 = tk.PhotoImage(file="src/A.png")
+# Field size and segment size for 2v2
+Field_Pixel_Width_2v2 = Field_Image_2v2.width()
+Field_Pixel_Height_2v2 = Field_Image_2v2.height()
+Grid_Size = 144
+Segment_Width_2v2 = Field_Pixel_Width_2v2 / Grid_Size
+Segment_Height_2v2 = Field_Pixel_Height_2v2 / Grid_Size
+
+# Field boundaries
+Field_TopLeft_X_2v2 = Center_X - Field_Pixel_Width_2v2 // 2
+Field_TopLeft_Y_2v2 = Center_Y - Field_Pixel_Height_2v2 // 2
+Field_BottomRight_X_2v2 = Center_X + Field_Pixel_Width_2v2 // 2
+Field_BottomRight_Y_2v2 = Center_Y + Field_Pixel_Height_2v2 // 2
+
+Field_Image_Skills = tk.PhotoImage(file="src/H.png")
+# Field SIze and segments for Skills 
+Field_Pixel_Width_Skills = Field_Image_Skills.width()
+Field_Pixel_Height_Skills = Field_Image_Skills.height()
+Grid_Size = 144
+Segment_Width_Skills = Field_Pixel_Width_Skills / Grid_Size
+Segment_Height_Skills = Field_Pixel_Height_Skills / Grid_Size
+
+# Field boundaries
+Field_TopLeft_X_Skills = Center_X - Field_Pixel_Width_Skills // 2
+Field_TopLeft_Y_Skills = Center_Y - Field_Pixel_Height_Skills // 2
+Field_BottomRight_X_Skills = Center_X + Field_Pixel_Width_Skills // 2
+Field_BottomRight_Y_Skills = Center_Y + Field_Pixel_Height_Skills // 2
+
+# ---------------------------------------------------- Functions --------------------------------------------------------#
+def User_Action(event):
+    pass
+label = ttk.Label(root, text="Game Mode:", font = ("Times New Roman", 22))
+label.pack(pady=10)
+label.place(x=15, y=400)
+
+Users = ["{Current_User}", "Sign Out",]
+Modes = ttk.Combobox(root, values=Users, state="readonly")  # readonly prevents typing
+Modes.bind("<<ComboboxSelected>>", User_Action)
+Modes.pack(pady=5)
+Modes.place(x=16, y=440)
+
+    # Set default value
+Modes.current(0) 
+if Modes.current() == 0:
+    Canvas.create_image(Center_X, Center_Y, image=Field_Image_Skills, anchor="center")
+if Modes.current() == 1:
+    Canvas.create_image(Center_X, Center_Y, image=Field_Image_2v2, anchor="center")
+
+    # Create the dropdown (Combobox)
+Games = ["Skills - Push Back", "2 v 2 - Push Back",]
+Modes = ttk.Combobox(root, values=Games, state="readonly")  # readonly prevents typing
+Modes.bind("<<ComboboxSelected>>", lambda e: [
+    Canvas.delete("all"),
+    Canvas.create_image(Center_X, Center_Y, image=Field_Image_Skills if Modes.current() == 0 else Field_Image_2v2, anchor="center"),
+    Draw_Field_Grid(),
+    Draw_Axis_Labels()
+])
+Modes.pack(pady=5)
+Modes.place(x=16, y=440)
+
+    # Set default value
+Modes.current(0) 
+if Modes.current() == 0:
+    Canvas.create_image(Center_X, Center_Y, image=Field_Image_Skills, anchor="center")
+if Modes.current() == 1:
+    Canvas.create_image(Center_X, Center_Y, image=Field_Image_2v2, anchor="center")
+
+def Weird_Width():
+    error_label = ttk.Label(
+        root,
+        text="Please Enter A Valid Width, Height, and/or Length",
+        font=("Times New Roman", 14),
+        style = "Width.TLabel"
+    )
+    error_label.place(x=540, y=750)
+    root.after(2500, error_label.destroy)
+def No_Width():
+    error_label = ttk.Label(
+        root,
+        text="Please Enter A Width, Height, and/or Length",
+        font=("Times New Roman", 14),
+        style = "No_Width.TLabel"
+    )
+    error_label.place(x=540, y=750)
+    root.after(2500, error_label.destroy)
+#------------------------ Enter Heading ---------------------#
+def Heading_Error():
+    error_label = tk.Label(
+        root,
+        text="Heading Error: Please Enter a Valid Heading (-360 to 360)",
+        fg="white", bg="Grey12",
+        font=("Times New Roman", 14),
+        relief="groove", bd=3
+    )
+    error_label.place(x=540, y=750)
+    root.after(2500, error_label.destroy)
+
+def Point_In_Field_Skills(x, y):
+    return Field_TopLeft_X_Skills <= x <= Field_BottomRight_X_Skills and Field_TopLeft_Y_Skills <= y <= Field_BottomRight_Y_Skills
+
+def Point_In_Field_2v2(x, y):
+    return Field_TopLeft_X_2v2 <= x <= Field_BottomRight_X_2v2 and Field_TopLeft_Y_2v2 <= y <= Field_BottomRight_Y_2v2
+
+def Line(x1, y1, x2, y2):
+    global Heading
+    if Current_Tool == "Line":
+        try:
+            Heading = int(Heading_Entry.get())
+            Robot_Had.config(text=f"Heading: {Heading}°")
+            if Heading < -360 or Heading > 360:
+                Heading_Error()
+                return
+        except ValueError:
+            Heading_Error()
+            return
+        if Modes.current() == 0: #Skills
+            Field_Line = Canvas.create_line(x1, y1, x2, y2, fill="orange", width=2)
+            Lines.append(Field_Line)
+            rel_x = x2 - Center_X
+            rel_y = y2 - Center_Y
+
+            grid_x = int(round(rel_x / Segment_Width_Skills))
+            grid_y = int(round(rel_y / Segment_Height_Skills))
+
+            Coordinates.append((grid_y, grid_x, Heading))
+            Line_Id.append(f"Line: {grid_x} {grid_y} {Heading}")
+
+            # Clear heading after each line draw
+            Heading_Entry.delete(0, tk.END)
+        if Modes.current() == 1: #2v2
+            Field_Line = Canvas.create_line(x1, y1, x2, y2, fill="orange", width=2)
+            Lines.append(Field_Line)
+            rel_x = x2 - Center_X
+            rel_y = y2 - Center_Y
+
+            grid_x = int(round(rel_x / Segment_Width_2v2))
+            grid_y = int(round(rel_y / Segment_Height_2v2))
+
+            Coordinates.append((grid_y, grid_x, Heading))
+            Line_Id.append(f"Line: {grid_x} {grid_y} {Heading}")
+
+            # Clear heading after each line draw
+            Heading_Entry.delete(0, tk.END)
+
+def Path_Draw_Line_Skills(event):
+    global Start_Point
+    if not Point_In_Field_Skills(event.x, event.y):
+        return
+
+    if not Heading_Entry.get().strip():
+        Heading_Error()
+        return
+
+    try:
+        heading_val = int(Heading_Entry.get())
+        if heading_val < -360 or heading_val > 360:
+            Heading_Error()
+            return
+    except ValueError:
+        Heading_Error()
+        return
+
+    if Start_Point is None:
+        Start_Point = (event.x, event.y)
+    else:
+        Line(Start_Point[0], Start_Point[1], event.x, event.y)
+        Start_Point = (event.x, event.y)
+
+def Path_Draw_Line_2v2(event):
+    global Start_Point
+    if not Point_In_Field_2v2(event.x, event.y):
+        return
+
+    if not Heading_Entry.get().strip():
+        Heading_Error()
+        return
+
+    try:
+        heading_val = int(Heading_Entry.get())
+        if heading_val < -360 or heading_val > 360:
+            Heading_Error()
+            return
+    except ValueError:
+        Heading_Error()
+        return
+
+    if Start_Point is None:
+        Start_Point = (event.x, event.y)
+    else:
+        Line(Start_Point[0], Start_Point[1], event.x, event.y)
+        Start_Point = (event.x, event.y)
+
+def Draw_Field_Grid():
+    global Modes
+    if Modes.current() == 0: #Skills
+        for i in range(Grid_Size + 1):
+            x = Field_TopLeft_X_Skills + i * Segment_Width_Skills
+            y = Field_TopLeft_Y_Skills + i * Segment_Height_Skills
+            Canvas.create_line(x, Field_TopLeft_Y_Skills, x, Field_BottomRight_Y_Skills, fill="grey40")
+            Canvas.create_line(Field_TopLeft_X_Skills, y, Field_BottomRight_X_Skills, y, fill="grey40")
+    if Modes.current() == 1:
+        for i in range(Grid_Size + 1): # 2v2
+            x = Field_TopLeft_X_2v2 + i * Segment_Width_2v2
+            y = Field_TopLeft_Y_2v2 + i * Segment_Height_2v2
+            Canvas.create_line(x, Field_TopLeft_Y_2v2, x, Field_BottomRight_Y_2v2, fill="grey40")
+            Canvas.create_line(Field_TopLeft_X_2v2, y, Field_BottomRight_X_2v2, y, fill="grey40")
+
+def Draw_Axis_Labels():
+    if Modes.current() == 0: # Skills
+        for i in range(-72, 73, 24):
+            x = Center_X + i * Segment_Width_Skills
+            y = Center_Y + i * Segment_Height_Skills
+            Canvas.create_text(x, Center_Y + 5, text=str(i), fill="white", font=("Courier", 8), anchor="n")
+            Canvas.create_text(Center_X + 5, y, text=str(i), fill="white", font=("Courier", 8), anchor="w")
+    if Modes.current() == 1: #2v2
+        for i in range(-72, 73, 24):
+            x = Center_X + i * Segment_Width_2v2
+            y = Center_Y + i * Segment_Height_2v2
+            Canvas.create_text(x, Center_Y + 5, text=str(i), fill="white", font=("Courier", 8), anchor="n")
+            Canvas.create_text(Center_X + 5, y, text=str(i), fill="white", font=("Courier", 8), anchor="w")
+
+def Coordinate_Change(): # Change into several functions for Skills and 2v2
+    global Coordinate_Length, Coordinates_List
+    if Coordinates_List:
+        Coordinates_List.destroy()
+    CorLen = "\n".join([str(c) for c in Coordinates])
+    Coordinates_List = tk.Label(root, text=CorLen, bg="grey12", fg="white", justify="left")
+    Coordinates_List.place(x=1350, y=200)
+
+    Coordinate_Length = len(Coordinates)
+    root.after(100, Coordinate_Change)
+
+def Coordinate_Change(): # Change into several functions for Skills and 2v2
+    global Coordinate_Length, Coordinates_List
+    if Coordinates_List:
+        Coordinates_List.destroy()
+    CorLen = "\n".join([str(c) for c in Coordinates])
+    Coordinates_List = tk.Label(root, text=CorLen, bg="grey12", fg="white", justify="left")
+    Coordinates_List.place(x=1350, y=200)
+
+    Coordinate_Length = len(Coordinates)
+    root.after(100, Coordinate_Change)
+def Robot_Draw():
+    Canvas.create_rectangle
+    pass
+
+def Robot_Input():
+    global x, y, x1, y1
+    Width = Width_Entry.get()
+    if not Width_Entry.get():
+        Weird_Width()
+        return
+    try:
+        Width = int(Width_Entry.get())
+    except ValueError:
+        Weird_Width()
+        return
+    Length = Length_Entry.get()
+    if not Length_Entry.get():
+        Weird_Width()
+        return
+    try:
+        Length = int(Length_Entry.get())
+    except ValueError:
+        Weird_Width()
+        return
+    Height = Height_Entry.get()
+    if not Height_Entry.get():
+        Weird_Width()
+        return
+    try:
+        Height = int(Height_Entry.get())
+    except ValueError:
+        Weird_Width()
+        return
+    Robot_Wid.config(text=f"Width: {Width}'")
+    Robot_Len.config(text=f"Length: {Length}'")
+    Robot_Hgt.config(text=f"Height: {Height}'")
+
+    x = int(Width) / 2
+    y = int(Length) / 2
+    x1 = int(Width) / 2
+    y1 = int(Length) / 2
+
+    # Obsatcles Variable Intialization -- done here as the WIdth and Lnegth are here declared and inputed.
+
+# --------------- Creates Labels for the robot's dimensions ----------------------------------- #
+def Labels():
+    Label = ttk.Label(root, text = " Robot Width: ",  
+                 font = ("Times New Roman", 14),
+                 )
+    Label.pack(padx = 5, pady = 5)
+    Label.place(x=15, y=100)
+    Label_1 = ttk.Label(root, text = " Robot Length: ",  
+                 font = ("Times New Roman", 14))
+    Label_1.pack(padx = 5, pady = 5)
+    Label_1.place(x=15, y=175)
+    Label_1 = ttk.Label(root, text = " Robot Height: ",  
+                 font = ("Times New Roman", 14),
+                 )
+    Label_1.pack(padx = 5, pady = 5)
+    Label_1.place(x=15, y=250)
+    Label_1 = ttk.Label(root, text = " Robot Heading: ",  
+                 font = ("Times New Roman", 14), 
+                 )
+    Label_1.pack(padx = 5, pady = 5)
+    Label_1.place(x=15, y=325)
+def Line_Tool_btn():
+    Line_Tool = ttk.Button(root, text=" - Line Tool - ")
+    Line_Tool.place(x=35, y=800)
+
+def Freehand():
+    pass
+
+def Freehand_Tool_btn():
+    Freehand_Tool = tk.Button(root, text=" - Freehand Tool - ", command=Freehand)
+    Freehand_Tool.place(x=180, y=800)
+
+def CloseApp(event=None):
+    root.destroy()
+
+def Submit(event=None):
+    Robot_Input()
+
+def Create_Line_ID():
+    if not len(Line_Id) == len(Coordinates):
+        while not len(Line_Id) == len(Coordinates):
+            Line_Id.pop()
+
+def Delete(event=None):
+    global Coordinates_List
+    if len(Lines) != 0:
+        last_line = Lines.pop()
+        Canvas.delete(last_line) 
+    if len(Line_Id) != 0:
+        Line_Id.pop()
+    if len(Coordinates) != 0:
+        Coordinates.pop()
+
+    # --------------------- GUI Elements ------------------------#z
+
+
+Width_Entry = ttk.Entry(root)
+Width_Entry.place(x=15, y=125)
+
+Length_Entry = ttk.Entry(root)
+Length_Entry.place(x=15, y=200)
+
+Height_Entry = ttk.Entry(root)
+Height_Entry.place(x=15, y=275)
+
+Heading_Entry = ttk.Entry(root)
+Heading_Entry.place(x=15, y=350)
+
+Robot_Wid = ttk.Label(root, text="         ")
+Robot_Wid.place(x=142, y=151)
+
+Robot_Len = ttk.Label(root, text="         ")
+Robot_Len.place(x=142, y=226)
+
+Robot_Hgt = ttk.Label(root, text="         ")
+Robot_Hgt.place(x=142, y=301)
+
+Robot_Had = ttk.Label(root, text="         ")
+Robot_Had.place(x=142, y=376)
+
+Input_Label = ttk.Label(root, anchor="center",
+                       text=" I N P U T S ",
+                       font=("Times New Roman", 35))
+Input_Label.place(x=7.5, y=22.5)
+
+Coordinates_Label = ttk.Label(root, anchor="center",
+                       text="- O U T P U T -",
+                       font=("Times New Roman", 30))
+Coordinates_Label.place(x=1217.5, y=25)
+Coordinates_Label = ttk.Label(root, anchor="center",
+                       text="- C O O R D I N A T E S -",
+                       font=("Times New Roman", 16))
+Coordinates_Label.place(x=1265, y=150)
+
+
+def Obstacles():
+    global x, y, x1, y1
+    Canvas.create_rectangle(
+        x, 
+        y,
+        x1,
+        y1,)
+
+
+style = ttk.Style()
+style.configure("Width.TLabel", foreground="white", background="#D9534F", padding=5)
+style.configure("No_Width.TLabel", foreground="white", background="#DD2121", padding=5)
+
+# ---------------------- Bindings ---------------------------
+
+root.bind("<BackSpace>", Delete)
+root.bind("<Return>", Submit)
+root.bind("<Escape>", CloseApp)
+if Modes.current() == 0:
+    Start_Point = None
+    Canvas.bind("<1>", Path_Draw_Line_Skills)
+    
+if Modes.current() == 1: 
+    Start_Point = None
+    Canvas.bind("<1>", Path_Draw_Line_2v2)
+    
+# -------------------- Draw Everything ----------------------
+Draw_Field_Grid()
+Draw_Axis_Labels()
+Line_Tool_btn()
+Freehand_Tool_btn()
+Labels()
+Coordinate_Change()
+root.mainloop()
