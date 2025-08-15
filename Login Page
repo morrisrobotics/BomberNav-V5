@@ -1,0 +1,215 @@
+import tkinter as tk
+from tkinter import ttk
+root = tk.Tk()
+root.title("Login")
+root.geometry("1920x1080")
+
+Team_Number = "88875M"
+Account = [
+    "Hassaan:MasterCoder",
+    "Josh:GearHead",
+    "Cody:R0botics!",
+    "Kayden:R0botics!",
+    "Andrew:R0botics!",
+    "Blue_Bomber:R0botics!",
+    "Vincenzo:OkTeac",
+]
+Usernames = [
+    "Hassaan",
+    "Josh",
+    "Cody",
+    "Kayden",
+    "Andrew",
+    "Blue_Bomber",
+
+]
+User_Input = [
+
+]
+Teams = [
+     
+]
+
+Name_Entry = ttk.Entry(root, width=30, font= ("Segoe UI", 25))
+Name_Entry.pack(pady=5)
+Name_Entry.insert(0, "Username",)
+Name_Entry.place(x=540,y=200)
+
+Password_Entry = ttk.Entry(root, width=30, show="*", font=("Segoe UI", 25))
+Password_Entry.pack(pady=5)
+Password_Entry.place(x=540,y=300)
+
+def Destroy():
+    Name_Entry.destroy()
+    Password_Entry.destroy()
+    login_button.destroy()
+    title_label.destroy()
+    Sign_Up_button.destroy()
+
+
+#--------------------------------------------- A P P -- L A U N C H E R ----------------------------------------#
+
+
+#---------------------------------- S I G N -- U P -- P A G E ------------------------------#
+
+
+def Login_Error():
+    error_label = ttk.Label(
+        root,
+        text="Username or Password is incorrect",
+        font=("Times New Roman", 12),
+        relief="groove",
+        style = "Error.TLabel"
+    )
+    error_label.place(x=675, y=500)
+    root.after(2500, error_label.destroy)
+    Destroy()
+
+def Login_Success():
+    Success_label = ttk.Label(
+        root,
+        text="Logging In...",
+        font=("Times New Roman", 12),
+        relief="groove",
+        style = "Success.TLabel"
+    )
+    Success_label.place(x=675, y=500)
+    root.after(2500, Success_label.destroy)
+    
+def Login(Event=None):
+    global Current_User
+    Username = Name_Entry.get()
+    Password = Password_Entry.get()
+    Credentials = f"{Username}:{Password}"
+    if Credentials in Account:
+            Login_Success()
+            Current_User = f"{Username}:{Team_Number}"
+            
+
+    else:
+            Login_Error()
+def Sign_Up():
+    global Name_Entry, Password_Entry, login_button, Sign_Up_button
+    global Name_Entry_SU, Password_Entry_SU, Team_Number_Entry, Team_Number, Sign_Up_Cbutton
+
+    Name_Entry.destroy()
+    Password_Entry.destroy()
+    login_button.destroy()
+    Sign_Up_button.destroy()
+
+    Name_Entry_SU = ttk.Entry(root, width=30, font= ("Segoe UI", 25))
+    Name_Entry_SU.pack(pady=5)
+    Name_Entry_SU.insert(0, "",)
+    Name_Entry_SU.place(x=540,y=200)
+
+    Password_Entry_SU = ttk.Entry(root, width=30, font=("Segoe UI", 25))
+    Password_Entry_SU.pack(pady=5)
+    Password_Entry_SU.insert(0, "")
+    Password_Entry_SU.place(x=540,y=300)
+
+    Team_Number_Entry = ttk.Entry(root, width=20, font=("Segoe UI", 15))
+    Team_Number = Team_Number_Entry.get()
+    Team_Number_Entry.pack(pady=5)
+    Team_Number_Entry.insert(0, "Team Number")
+    Team_Number_Entry.place(x=540,y=400)
+
+    Sign_Up_Cbutton = ttk.Button(root, text="Sign Up", style="Accent.TButton", command=Sign_Up_Complete)
+    Sign_Up_Cbutton.pack(pady=10)
+    Sign_Up_Cbutton.place(x=750 , y=500)
+
+def Username_Error():
+    Usernames_Error = ttk.Label(
+        root,
+        text="Username Taken, Please Choose Another",
+        font=("Times New Roman", 12),
+        relief="groove",
+        style = "Error.TLabel"
+    )
+    Usernames_Error.place(x=675, y=500)
+    root.after(2500, Usernames_Error.destroy)
+
+def No_Username():
+    Usernames_Error = ttk.Label(
+        root,
+        text="Please Enter A Username",
+        font=("Times New Roman", 12),
+        relief="groove",
+        style = "Error.TLabel"
+    )
+    Usernames_Error.place(x=675, y=500)
+    root.after(2500, Usernames_Error.destroy)
+
+def Password_Error():
+    Passwords_Error = ttk.Label(
+        root,
+        text="Please Enter a Password",
+        font=("Times New Roman", 12),
+        relief="groove",
+        style = "Error.TLabel"
+    )
+    Passwords_Error.place(x=675, y=500)
+    root.after(2500, Passwords_Error.destroy)
+
+def Sign_Up_Complete():
+    global Name_Entry, Password_Entry, login_button, Sign_Up_button
+    global Name_Entry_SU, Password_Entry_SU, Team_Number_Entry, Sign_Up_Cbutton
+
+    Username_SU = Name_Entry_SU.get()
+    Password_SU = Password_Entry_SU.get()
+    Team_Number = Team_Number_Entry.get()
+    if Username_SU.strip().lower() in [u.strip().lower() for u in Usernames]:
+        Username_Error()
+        return
+    if not Name_Entry_SU.get():
+        No_Username()
+        return
+    if not Password_Entry_SU.get():
+        Password_Error()
+        return
+    else: 
+        if not Password_Entry_SU.get():
+            Password_Error()
+            return
+        Usernames.append(Username_SU)
+        Account.append(f"{Username_SU}:{Password_SU}")
+        Teams.append(f"{Username_SU}:{Team_Number}")
+
+    Name_Entry_SU.destroy()
+    Password_Entry_SU.destroy()
+    Team_Number_Entry.destroy()
+    Sign_Up_Cbutton.destroy()
+
+    Name_Entry = ttk.Entry(root, width=30, font= ("Segoe UI", 25))
+    Name_Entry.pack(pady=5)
+    Name_Entry.insert(0, "Username",)
+    Name_Entry.place(x=540,y=200)
+
+    Password_Entry = ttk.Entry(root, width=30, show="*", font=("Segoe UI", 25))
+    Password_Entry.pack(pady=5)
+    Password_Entry.place(x=540,y=300)
+
+    Sign_Up_button = ttk.Button(root, text="Sign Up", style="Accent.TButton", command=Sign_Up)
+    Sign_Up_button.pack(pady=10)
+    Sign_Up_button.place(x=1080 , y=100)
+
+    login_button = ttk.Button(root, text="Login", style="Accent.TButton", command=Login)
+    login_button.pack(pady=10)
+    login_button.place(x=750 , y=400)
+style = ttk.Style()
+style.configure("Error.TLabel", foreground="white", background="#D9534F", padding=5)
+style.configure("Success.TLabel", foreground="white", background="#5CB85C", padding=5)
+root.bind("<Return>", Login)
+title_label = ttk.Label(root, text="Account Login", font=("Segoe UI", 30))
+title_label.pack(pady=15)
+title_label.place(x=680, y=100)
+
+
+login_button = ttk.Button(root, text="Login", style="Accent.TButton", command=Login)
+login_button.pack(pady=10)
+login_button.place(x=750 , y=400)
+
+Sign_Up_button = ttk.Button(root, text="Sign Up", style="Accent.TButton", command=Sign_Up)
+Sign_Up_button.pack(pady=10)
+Sign_Up_button.place(x=1080 , y=100)
+
+root.mainloop()
